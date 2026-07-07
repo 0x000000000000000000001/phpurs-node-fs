@@ -1,0 +1,20 @@
+package:
+  name: node-fs
+  dependencies:
+    - datetime
+    - effect
+    - either
+    - enums
+    - exceptions
+    - functions
+    - integers
+    - js-date
+    - maybe
+    - node-buffer
+    - node-path
+    - node-streams
+    - nullable
+    - partial
+    - prelude
+    - strings
+    - unsafe-coerce
