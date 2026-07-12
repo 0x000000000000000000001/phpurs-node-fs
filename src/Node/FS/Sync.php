@@ -9,7 +9,7 @@ $readFileImpl = function($file, $opts) {
 };
 
 $writeFileImpl = function($file, $buff, $opts) {
-    $res = @file_put_contents($file, $buff);
+    $res = @\file_put_contents($file, $buff);
     if ($res === false) {
         throw new \Exception("Failed to write file: $file");
     }

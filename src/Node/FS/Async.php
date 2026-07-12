@@ -11,11 +11,11 @@ $readFileImpl = function($file, $opts, $cb) {
 };
 
 $writeFileImpl = function($file, $buff, $opts, $cb) {
-    $res = file_put_contents($file, $buff);
+    $res = \file_put_contents($file, $buff);
     if ($res === false) {
         $errArr = error_get_last();
         $msg = "Failed to write file: $file. Error: " . ($errArr ? $errArr['message'] : 'Unknown');
-        file_put_contents('php://stderr', $msg . "\n");
+        \file_put_contents('php://stderr', $msg . "\n");
         $err = new \Exception($msg);
         $cb($err, null);
     } else {
