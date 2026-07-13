@@ -46,10 +46,18 @@ $unlinkImpl = function($file) {
     }
 };
 
+$appendFileSyncImpl = function($file, $buff, $opts) {
+    $res = @\file_put_contents($file, $buff, FILE_APPEND);
+    if ($res === false) {
+        throw new \Exception("Failed to append to file: $file");
+    }
+};
+
 $exports['readFileImpl'] = $readFileImpl;
 $exports['writeFileImpl'] = $writeFileImpl;
 $exports['mkdirImpl'] = $mkdirImpl;
 $exports['readdirImpl'] = $readdirImpl;
 $exports['renameImpl'] = $renameImpl;
 $exports['unlinkImpl'] = $unlinkImpl;
+$exports['appendFileSyncImpl'] = $appendFileSyncImpl;
 return $exports;
