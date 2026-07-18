@@ -53,11 +53,11 @@ $appendFileSyncImpl = function($file, $buff, $opts) {
     }
 };
 
-$exports['readFileImpl'] = $readFileImpl;
-$exports['writeFileImpl'] = $writeFileImpl;
-$exports['mkdirImpl'] = $mkdirImpl;
-$exports['readdirImpl'] = $readdirImpl;
-$exports['renameImpl'] = $renameImpl;
-$exports['unlinkImpl'] = $unlinkImpl;
+$exports['readFileSyncImpl'] = $readFileImpl;
+$exports['writeFileSyncImpl'] = $writeFileImpl;
+$exports['mkdirSyncImpl'] = $mkdirImpl;
+$exports['readdirSyncImpl'] = $readdirImpl;
+$exports['renameSyncImpl'] = $renameImpl;
+$exports['unlinkSyncImpl'] = $unlinkImpl;
 $exports['appendFileSyncImpl'] = $appendFileSyncImpl;
 return $exports;
