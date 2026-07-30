@@ -71,7 +71,7 @@ if (!class_exists('AmphpReadStreamProxy')) {
             }
         }
 
-        public function destroy($err = null) {
+        public function destroy($err) {
             if ($this->file) $this->file->close();
             if ($err) $this->emit('error', $err);
             $this->emit('close');
@@ -153,7 +153,7 @@ if (!class_exists('AmphpWriteStreamProxy')) {
             });
         }
 
-        public function destroy($err = null) {
+        public function destroy($err) {
             if ($this->file) $this->file->close();
             if ($err) $this->emit('error', $err);
             $this->emit('close');
