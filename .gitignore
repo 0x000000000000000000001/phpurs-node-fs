@@ -5,9 +5,11 @@
 /bower_components/
 /node_modules/
 /tmp/
-/output/
+output/
+output.bak/
 package-lock.json
 .DS_Store
 .spago
 output
+output.bak
 .psc-ide-port
