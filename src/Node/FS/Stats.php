@@ -22,9 +22,16 @@ $exports['accessedTimeMsImpl'] = function($s) { return isset($s['atime']) ? $s['
 $exports['modifiedTimeMsImpl'] = function($s) { return isset($s['mtime']) ? $s['mtime'] * 1000 : 0; };
 $exports['statusChangedTimeMsImpl'] = function($s) { return isset($s['ctime']) ? $s['ctime'] * 1000 : 0; };
 $exports['birthtimeMsImpl'] = function($s) { return isset($s['ctime']) ? $s['ctime'] * 1000 : 0; };
-$exports['accessedTimeImpl'] = function($s) { return new \DateTime('@' . (isset($s['atime']) ? $s['atime'] : 0)); };
-$exports['modifiedTimeImpl'] = function($s) { return new \DateTime('@' . (isset($s['mtime']) ? $s['mtime'] : 0)); };
-$exports['statusChangedTimeImpl'] = function($s) { return new \DateTime('@' . (isset($s['ctime']) ? $s['ctime'] : 0)); };
-$exports['birthTimeImpl'] = function($s) { return new \DateTime('@' . (isset($s['ctime']) ? $s['ctime'] : 0)); };
+// Data.JSDate values expose getTime() in milliseconds.
+class PhpursStatsDate {
+    public $ms;
+    public function __construct($seconds) { $this->ms = ((float) $seconds) * 1000.0; }
+    public function getTime() { return $this->ms; }
+}
+
+$exports['accessedTimeImpl'] = function($s) { return new PhpursStatsDate(isset($s['atime']) ? $s['atime'] : 0); };
+$exports['modifiedTimeImpl'] = function($s) { return new PhpursStatsDate(isset($s['mtime']) ? $s['mtime'] : 0); };
+$exports['statusChangedTimeImpl'] = function($s) { return new PhpursStatsDate(isset($s['ctime']) ? $s['ctime'] : 0); };
+$exports['birthTimeImpl'] = function($s) { return new PhpursStatsDate(isset($s['ctime']) ? $s['ctime'] : 0); };
 
 return $exports;

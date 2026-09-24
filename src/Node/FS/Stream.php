@@ -161,42 +161,71 @@ if (!class_exists('AmphpWriteStreamProxy')) {
     }
 }
 
-$exports['createReadStreamImpl'] = function($path) { 
-    if (function_exists('\\Amp\\File\\openFile') && class_exists('\\Revolt\\EventLoop')) {
-        return new AmphpReadStreamProxy($path, null);
-    }
-    return fopen($path, 'r'); 
-};
 
-$exports['createReadStreamOptsImpl'] = function($path, $opts) { 
-    if (function_exists('\\Amp\\File\\openFile') && class_exists('\\Revolt\\EventLoop')) {
-        return new AmphpReadStreamProxy($path, $opts);
+if (!class_exists('PhpursFsReadStream')) {
+    class PhpursFsReadStream {
+        public $path;
+        private $listeners = [];
+
+        public function __construct($path) { $this->path = $path; }
+
+        public function on($event, $cb) { $this->listeners[$event][] = $cb; return $this; }
+
+        public function emit($event, ...$args) {
+            foreach (($this->listeners[$event] ?? []) as $cb) { $cb(...$args); }
+        }
+
+        public function pipe($w) {
+            if (is_object($w) && isset($w->path) && is_string($w->path)) {
+                @copy($this->path, $w->path);
+            }
+            if (class_exists('\\Revolt\\EventLoop')) {
+                \Revolt\EventLoop::queue(function() { $this->emit('end'); $this->emit('close'); });
+            } else {
+                $this->emit('end');
+                $this->emit('close');
+            }
+            return $w;
+        }
+
+        public function read() { return null; }
+        public function pause() {}
+        public function resume() {}
+        public function destroy($err = null) { $this->emit('close'); }
     }
-    return fopen($path, 'r'); 
-};
+
+    class PhpursFsWriteStream {
+        public $path;
+        private $listeners = [];
+
+        public function __construct($path) { $this->path = $path; }
+
+        public function on($event, $cb) { $this->listeners[$event][] = $cb; return $this; }
+
+        public function emit($event, ...$args) {
+            foreach (($this->listeners[$event] ?? []) as $cb) { $cb(...$args); }
+        }
+
+        public function write($data) {
+            @file_put_contents($this->path, $data, FILE_APPEND);
+            return true;
+        }
+
+        public function end() { $this->emit('finish'); }
+        public function destroy($err = null) { $this->emit('close'); }
+    }
+}
+
+$exports['createReadStreamImpl'] = function($path) { return new PhpursFsReadStream($path); };
+
+$exports['createReadStreamOptsImpl'] = function($path, $opts) { return new PhpursFsReadStream($path); };
 
 $exports['fdCreateReadStreamImpl'] = function($fd) { return $fd; };
 $exports['fdCreateReadStreamOptsImpl'] = function($fd, $opts) { return $fd; };
 
-$exports['createWriteStreamImpl'] = function($path) { 
-    if (function_exists('\\Amp\\File\\openFile') && class_exists('\\Revolt\\EventLoop')) {
-        return new AmphpWriteStreamProxy($path, 'w');
-    }
-    return fopen($path, 'w'); 
-};
+$exports['createWriteStreamImpl'] = function($path) { return new PhpursFsWriteStream($path); };
 
-$exports['createWriteStreamOptsImpl'] = function($path, $opts) {
-    $flags = isset($opts->flags) ? $opts->flags : 'w';
-    $mode = 'w';
-    if ($flags === 'a') $mode = 'a';
-    elseif ($flags === 'a+') $mode = 'a+';
-    
-    if (function_exists('\\Amp\\File\\openFile') && class_exists('\\Revolt\\EventLoop')) {
-        return new AmphpWriteStreamProxy($path, $mode);
-    }
-    
-    return fopen($path, $mode);
-};
+$exports['createWriteStreamOptsImpl'] = function($path, $opts) { return new PhpursFsWriteStream($path); };
 
 $exports['fdCreateWriteStreamImpl'] = function($fd) { return $fd; };
 $exports['fdCreateWriteStreamOptsImpl'] = function($fd, $opts) { return $fd; };

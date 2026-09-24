@@ -85,6 +85,10 @@ workspace:
       path: "../phpurs-lazy"
     math:
       path: "../phpurs-math"
+    js-date:
+      path: "../phpurs-js-date"
+    node-buffer:
+      path: "../phpurs-node-buffer"
     node-event-emitter:
       path: "../phpurs-node-event-emitter"
     node-http:
