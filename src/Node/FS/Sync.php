@@ -1,67 +1,62 @@
 <?php
 
-$readFileImpl = function($file, $opts) {
-    $res = @file_get_contents($file);
-    if ($res === false) {
+$exports = [];
+$exports['readFileSyncImpl'] = function ($file, $options) {
+    $result = @file_get_contents($file);
+    if ($result === false) {
         throw new \Exception("Failed to read file: $file");
     }
-    return $res;
+    return $result;
 };
 
-$writeFileImpl = function($file, $buff, $opts) {
-    $res = @\file_put_contents($file, $buff);
-    if ($res === false) {
+$exports['writeFileSyncImpl'] = function ($file, $buffer, $options) {
+    $result = @\file_put_contents($file, $buffer);
+    if ($result === false) {
         throw new \Exception("Failed to write file: $file");
     }
 };
 
-$mkdirImpl = function($file, $opts) {
-    $res = @mkdir($file, 0777, true);
-    if (!$res && !is_dir($file)) {
+$exports['mkdirSyncImpl'] = function ($file, $options) {
+    $result = @mkdir($file, 0777, true);
+    if (!$result && !is_dir($file)) {
         throw new \Exception("Failed to create directory: $file");
     }
 };
 
-$readdirImpl = function($file) {
-    $res = @scandir($file);
-    if ($res === false) {
+$exports['readdirSyncImpl'] = function ($file) {
+    $result = @scandir($file);
+    if ($result === false) {
         throw new \Exception("Failed to read directory: $file");
     }
-    return array_values(array_filter($res, function($item) {
-        return $item !== '.' && $item !== '..';
-    }));
+    return array_values(
+        array_filter($result, function ($item) {
+            return $item !== '.' && $item !== '..';
+        }),
+    );
 };
 
-$renameImpl = function($old, $new) {
-    $res = @rename($old, $new);
-    if ($res === false) {
-        throw new \Exception("Failed to rename $old to $new");
+$exports['renameSyncImpl'] = function ($oldPath, $newPath) {
+    $result = @rename($oldPath, $newPath);
+    if ($result === false) {
+        throw new \Exception("Failed to rename $oldPath to $newPath");
     }
 };
 
-$unlinkImpl = function($file) {
-    $res = @unlink($file);
-    if ($res === false && file_exists($file)) {
+$exports['unlinkSyncImpl'] = function ($file) {
+    $result = @unlink($file);
+    if ($result === false && file_exists($file)) {
         throw new \Exception("Failed to unlink: $file");
     }
 };
 
-$appendFileSyncImpl = function($file, $buff, $opts) {
-    $res = @\file_put_contents($file, $buff, FILE_APPEND);
-    if ($res === false) {
+$exports['appendFileSyncImpl'] = function ($file, $buffer, $options) {
+    $result = @\file_put_contents($file, $buffer, FILE_APPEND);
+    if ($result === false) {
         throw new \Exception("Failed to append to file: $file");
     }
 };
 
-$exports['readFileSyncImpl'] = $readFileImpl;
-$exports['writeFileSyncImpl'] = $writeFileImpl;
-$exports['mkdirSyncImpl'] = $mkdirImpl;
-$exports['readdirSyncImpl'] = $readdirImpl;
-$exports['renameSyncImpl'] = $renameImpl;
-$exports['unlinkSyncImpl'] = $unlinkImpl;
-$exports['appendFileSyncImpl'] = $appendFileSyncImpl;
-
-$exports['accessImpl'] = function($file, $mode) {
+$exports['accessImpl'] = function ($file, $mode) {
     // The PureScript wrapper catches exceptions (try/blush); a returned value
     // would be treated as success.
     if (!file_exists($file)) {
@@ -80,17 +75,17 @@ $exports['accessImpl'] = function($file, $mode) {
     return null;
 };
 
-$exports['copyFileImpl'] = function($src, $dest, $mode) {
+$exports['copyFileImpl'] = function ($source, $destination, $mode) {
     $mode = is_object($mode) ? (int) ($mode->value0 ?? 0) : (int) $mode;
-    if ($mode === 1 && file_exists($dest)) {
-        throw new \Exception("EEXIST: file already exists, copyfile '$src' -> '$dest'");
+    if ($mode === 1 && file_exists($destination)) {
+        throw new \Exception("EEXIST: file already exists, copyfile '$source' -> '$destination'");
     }
-    if (!@copy($src, $dest)) {
-        throw new \Exception("Failed to copy $src to $dest");
+    if (!@copy($source, $destination)) {
+        throw new \Exception("Failed to copy $source to $destination");
     }
 };
 
-$exports['mkdtempImpl'] = function($prefix, $encoding) {
+$exports['mkdtempImpl'] = function ($prefix, $encoding) {
     $dir = rtrim($prefix, '/');
     for ($i = 0; $i < 10; $i++) {
         $candidate = $dir . '/' . substr(bin2hex(random_bytes(4)), 0, 6);
@@ -104,30 +99,30 @@ $exports['mkdtempImpl'] = function($prefix, $encoding) {
     throw new \Exception("Failed to create temporary directory for prefix: $prefix");
 };
 
-$exports['truncateSyncImpl'] = function($file, $len) {
-    $fh = @fopen($file, 'r+');
-    if ($fh === false) {
+$exports['truncateSyncImpl'] = function ($file, $length) {
+    $handle = @fopen($file, 'r+');
+    if ($handle === false) {
         throw new \Exception("Failed to open for truncate: $file");
     }
-    if (!@ftruncate($fh, (int) $len)) {
-        fclose($fh);
+    if (!@ftruncate($handle, (int) $length)) {
+        fclose($handle);
         throw new \Exception("Failed to truncate: $file");
     }
-    fclose($fh);
+    fclose($handle);
 };
 
-$exports['chownSyncImpl'] = function($file, $uid, $gid) {
+$exports['chownSyncImpl'] = function ($file, $uid, $gid) {
     @chown($file, (int) $uid);
     @chgrp($file, (int) $gid);
 };
 
-$exports['chmodSyncImpl'] = function($file, $mode) {
+$exports['chmodSyncImpl'] = function ($file, $mode) {
     if (!@chmod($file, octdec($mode))) {
         throw new \Exception("Failed to chmod: $file");
     }
 };
 
-$exports['statSyncImpl'] = function($file) {
+$exports['statSyncImpl'] = function ($file) {
     $stats = @stat($file);
     if ($stats === false) {
         throw new \Exception("ENOENT: no such file or directory, stat '$file'");
@@ -135,7 +130,7 @@ $exports['statSyncImpl'] = function($file) {
     return $stats;
 };
 
-$exports['lstatSyncImpl'] = function($file) {
+$exports['lstatSyncImpl'] = function ($file) {
     $stats = @lstat($file);
     if ($stats === false) {
         throw new \Exception("ENOENT: no such file or directory, lstat '$file'");
@@ -143,42 +138,42 @@ $exports['lstatSyncImpl'] = function($file) {
     return $stats;
 };
 
-$exports['linkSyncImpl'] = function($old, $new) {
-    if (!@link($old, $new)) {
-        throw new \Exception("Failed to link $old to $new");
+$exports['linkSyncImpl'] = function ($oldPath, $newPath) {
+    if (!@link($oldPath, $newPath)) {
+        throw new \Exception("Failed to link $oldPath to $newPath");
     }
 };
 
-$exports['symlinkSyncImpl'] = function($target, $linkpath, $symlinkType) {
+$exports['symlinkSyncImpl'] = function ($target, $linkpath, $symlinkType) {
     if (!@symlink($target, $linkpath)) {
         throw new \Exception("Failed to symlink $target to $linkpath");
     }
 };
 
-$exports['readlinkSyncImpl'] = function($file) {
-    $res = @readlink($file);
-    if ($res === false) {
+$exports['readlinkSyncImpl'] = function ($file) {
+    $result = @readlink($file);
+    if ($result === false) {
         throw new \Exception("EINVAL: invalid argument, readlink '$file'");
     }
-    return $res;
+    return $result;
 };
 
-$exports['realpathSyncImpl'] = function($path, $cache) {
-    $res = @realpath($path);
-    if ($res === false) {
+$exports['realpathSyncImpl'] = function ($path, $cache) {
+    $result = @realpath($path);
+    if ($result === false) {
         throw new \Exception("ENOENT: no such file or directory, realpath '$path'");
     }
-    return $res;
+    return $result;
 };
 
-$exports['rmdirSyncImpl'] = function($path, $opts) {
+$exports['rmdirSyncImpl'] = function ($path, $options) {
     if (!@rmdir($path)) {
         throw new \Exception("Failed to remove directory: $path");
     }
 };
 
-$exports['rmSyncImpl'] = function($path, $opts) {
-    $remove = function($target) use (&$remove) {
+$exports['rmSyncImpl'] = function ($path, $options) {
+    $remove = function ($target) use (&$remove) {
         if (is_dir($target) && !is_link($target)) {
             foreach (scandir($target) as $entry) {
                 if ($entry !== '.' && $entry !== '..') {
@@ -193,15 +188,15 @@ $exports['rmSyncImpl'] = function($path, $opts) {
     $remove($path);
 };
 
-$exports['utimesSyncImpl'] = function($file, $atime, $mtime) {
+$exports['utimesSyncImpl'] = function ($file, $atime, $mtime) {
     @touch($file, (int) $mtime, (int) $atime);
 };
 
-$exports['existsSyncImpl'] = function($file) {
+$exports['existsSyncImpl'] = function ($file) {
     return file_exists($file);
 };
 
-$exports['openSyncImpl'] = function($file, $flags, $mode) {
+$exports['openSyncImpl'] = function ($file, $flags, $mode) {
     $handle = @fopen($file, $flags);
     if ($handle === false) {
         throw new \Exception("ENOENT: no such file or directory, open '$file'");
@@ -209,40 +204,40 @@ $exports['openSyncImpl'] = function($file, $flags, $mode) {
     return $handle;
 };
 
-$exports['readSyncImpl'] = function($fd, $buffer, $offset, $length, $position) {
+$exports['readSyncImpl'] = function ($handle, $buffer, $offset, $length, $position) {
     if ($position !== null) {
-        $pos = is_object($position) ? (int) ($position->value0 ?? 0) : (int) $position;
-        @fseek($fd, $pos);
+        $positionValue = is_object($position) ? (int) ($position->value0 ?? 0) : (int) $position;
+        @fseek($handle, $positionValue);
     }
-    $data = @fread($fd, (int) $length);
+    $data = @fread($handle, (int) $length);
     if ($data === false) {
-        throw new \Exception("Failed to read from file descriptor");
+        throw new \Exception('Failed to read from file descriptor');
     }
     return strlen($data);
 };
 
-$exports['writeSyncImpl'] = function($fd, $buffer, $offset, $length, $position) {
+$exports['writeSyncImpl'] = function ($handle, $buffer, $offset, $length, $position) {
     if ($position !== null) {
-        $pos = is_object($position) ? (int) ($position->value0 ?? 0) : (int) $position;
-        @fseek($fd, $pos);
+        $positionValue = is_object($position) ? (int) ($position->value0 ?? 0) : (int) $position;
+        @fseek($handle, $positionValue);
     }
     $data = substr($buffer, (int) $offset, (int) $length);
-    $written = @fwrite($fd, $data);
+    $written = @fwrite($handle, $data);
     if ($written === false) {
-        throw new \Exception("Failed to write to file descriptor");
+        throw new \Exception('Failed to write to file descriptor');
     }
     return $written;
 };
 
-$exports['fsyncSyncImpl'] = function($fd) {
-    @fflush($fd);
+$exports['fsyncSyncImpl'] = function ($handle) {
+    @fflush($handle);
     if (\function_exists('fsync')) {
-        @fsync($fd);
+        @fsync($handle);
     }
 };
 
-$exports['closeSyncImpl'] = function($fd) {
-    @fclose($fd);
+$exports['closeSyncImpl'] = function ($handle) {
+    @fclose($handle);
 };
 
 return $exports;
